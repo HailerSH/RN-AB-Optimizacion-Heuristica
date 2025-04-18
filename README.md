@@ -86,8 +86,31 @@ Debe incluir:
 ### Reporte de Contribución Individual
 
 Incluir una sección como la siguiente:
-
-```text
 + Juan Pérez: programación del componente A, elaboración del reporte  
 + Maria Pérez: formato del reporte, elaboración de la animación X  
 + Diego Posada: selección de bibliografía, desarrollo de los componentes C y D, elaboración del reporte
+
+---
+
+## Código
+
+Referencie en el reporte técnico un **repositorio Git** donde se pueda consultar el código.
+
+---
+
+## Lenguajes Permitidos
+
+Este trabajo debe realizarse en **R** o **Julia**.
+
+---
+
+## Recursos
+
+- [Función de Rosenbrock](https://en.wikipedia.org/wiki/Rosenbrock_function)
+- [Función de Rastrigin](https://en.wikipedia.org/wiki/Rastrigin_function)
+- [Función de Schwefel](http://benchmarkfcns.xyz/benchmarkfcns/schwefelfcn.html)
+- [Función de Griewank](http://benchmarkfcns.xyz/benchmarkfcns/griewankfcn.html)
+- [Función Goldstein-Price](https://www.sfu.ca/~ssurjano/goldpr.html)
+- [Función de las seis jorobas de camello (Three-Hump Camel)](https://www.sfu.ca/~ssurjano/camel3.html)
+- [Test functions for optimization - Wikipedia](https://en.wikipedia.org/wiki/Test_functions_for_optimization)
+- [Travelling salesman problem - Wikipedia](https://en.wikipedia.org/wiki/Travelling_salesman_problem)
