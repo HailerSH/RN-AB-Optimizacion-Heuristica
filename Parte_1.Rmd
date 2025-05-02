@@ -15,7 +15,7 @@ library(GA)
 library(ggplot2)
 library(reshape2)
 library(plot3D)
-
+library(animation)
 
 ```
 
@@ -107,9 +107,7 @@ funcion_schwefel <- function(vector_x){
 }
 ```
 
-```{r}
-funcion_schwefel(c(420.9687, 420.9687))
-```
+
 
 #### Representación 3D de la función:
 
@@ -379,33 +377,50 @@ Mediante el uso de la librería `'GA'` se va implementar un algoritmo genético 
 ### Optimización Mediante Algoritmo Genético de Función de Rosenbrock
 #### Dos Dimensiones:
 
-Para evaluar el comportamiento del algoritmo post-evaluación se va a definir una función que registra la población de cada generación.
-```{r}
-make_postfit <- function(pop_store_name) {
-  # Limpiar la variable global previo a su uso
+Para evaluar el comportamiento del algoritmo post-evaluación se va a definir una función que registra la población de cada generación junto con el mejor individuo de la población.
+```{r definicion_funcion_postfit}
+make_postfit <- function(pop_store_name, best_store_name = NULL) {
+  # Clear previous population variable
   assign(pop_store_name, list(), envir = globalenv())
+
+  # Clear best individual variable if provided
+  if (!is.null(best_store_name)) {
+    assign(best_store_name, list(), envir = globalenv())
+  }
 
   function(object, ...) {
     pop <- object@population
+    fitness <- object@fitness
 
-    
+    # Append current population
     pop_list <- get(pop_store_name, envir = globalenv())
     pop_list <- append(pop_list, list(pop))
-
-    # Actualizar la variable global
     assign(pop_store_name, pop_list, envir = globalenv())
+
+    # If best_store_name is provided, track best individual
+    if (!is.null(best_store_name)) {
+      best_index <- which.max(fitness)  # For maximization
+      best_individual <- pop[best_index, , drop = FALSE]
+
+      best_list <- get(best_store_name, envir = globalenv())
+      best_list <- append(best_list, list(best_individual))
+      assign(best_store_name, best_list, envir = globalenv())
+    }
 
     return(object)
   }
 }
+
 ```
- 
+
+Se procede a realizar la optimización en dos dimensiones de la función Rosenbrock.
 
 ```{r opt_GA_rosenbrock}
-postfit_rosenbrock <- make_postfit("pop_rosenbrock")
+postfit_rosenbrock <- make_postfit("pop_rosenbrock", "best_rosenbrock")
 
 TYPE = "real-valued"
 popSize = 50
+
 GA_rosenbrock <- ga(type = TYPE,
                     fitness = function(x){-funcion_rosenbrock(x)},
                     lower = c(-2.048 , -2.048), upper = c(2.048 , 2.048),
@@ -416,7 +431,7 @@ GA_rosenbrock <- ga(type = TYPE,
                     crossover = gaControl(TYPE)$crossover, 
                     mutation = gaControl(TYPE)$mutation,
                     popSize = popSize,
-                    pcrossover = 0.8, 
+                    pcrossover = 0.88, 
                     pmutation = 0.1, 
                     elitism = base::max(1, round(popSize*0.05)), 
                     seed = 555,
@@ -425,6 +440,8 @@ GA_rosenbrock <- ga(type = TYPE,
                     )
 summary(GA_rosenbrock)
 ```
+
+
 ```{r}
 plot(GA_rosenbrock)
 ```
@@ -438,7 +455,7 @@ adapt_rosenbrock <- function(x1, x2) {
   mapply(function(a, b) funcion_rosenbrock(c(a, b)), x1, x2)
 }
 f <- outer(x1, x2, adapt_rosenbrock)
-iter_to_show = c(1,5,10,20,50,100)
+iter_to_show = c(1,60,120, 180, 240, 256)
 par(mfrow = c(3,2), mar = c(2,2,2,1),
     mgp = c(1, 0.4, 0), tck = -.01)
 for(i in seq(iter_to_show))
@@ -448,6 +465,49 @@ for(i in seq(iter_to_show))
   points(pop_rosenbrock[[iter_to_show[i]]], pch = 20, col = "forestgreen")
 }
 ```
+
+```{r create_rosenbrock_ga_gif, eval = TRUE, echo=FALSE, include=FALSE}
+
+
+# Define the grid and function once
+x1 <- x2 <- seq(-5.12, 5.12, by = 0.1)
+
+skip <- 3
+
+# Save GIF
+saveGIF({
+  for (i in 1:floor(length(pop_rosenbrock)/skip)) {
+    contour(x1, x2, f, drawlabels = FALSE, col = "grey50",
+            xlab = expression(x[1]), ylab = expression(x[2]),
+            main = paste("Iteration:", i*skip))
+    points(pop_rosenbrock[[i*skip]], pch = 20, col = "forestgreen")
+    
+    points(best_rosenbrock[[i*skip]],pch = 19, col = "red", cex = 1.5)
+    
+  }
+  last_iter <- length(pop_rosenbrock)
+  for (i in 1:15) {
+    contour(x1, x2, f, drawlabels = FALSE, col = "grey50",
+            xlab = expression(x[1]), ylab = expression(x[2]),
+            main = paste("Iteration:", last_iter))
+    points(pop_rosenbrock[[last_iter]], pch = 20, col = "forestgreen")
+    
+    points(best_rosenbrock[[last_iter]],pch = 19, col = "red", cex = 1.5)
+  }
+}, movie.name = "GA_Rosenbrock.gif", interval = 0.2, ani.width = 600, ani.height = 600)
+
+```
+
+
+```{r show_gif, echo=FALSE, out.width='100%'}
+knitr::include_graphics("GA_Rosenbrock.gif")
+```
+
+```{r}
+
+```
+
+#### Tres Dimensiones:
 
 
 ------------------------------------------------------------------------
