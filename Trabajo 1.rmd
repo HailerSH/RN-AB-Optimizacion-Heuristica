@@ -1,0 +1,384 @@
+---
+title: "Trabajo 1"
+author: "Juan José Correa Hurtado"
+date: "2025-04-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+# Proyecto de Optimización en R
+Funciones de Prueba: Rosenbrock y Schwefel
+Métodos: Descenso por Gradiente, PSO, DE
+
+
+```{r}
+# Instalar si es necesario install.packages(c("GA", "DEoptim", "pso", "animation"))
+library(GA)
+library(DEoptim)
+library(pso)
+library(animation)
+library(numDeriv)
+
+```
+
+
+
+# Funciones de Prueba
+Utilizaremos las funciones Rosenbrock y Schwefel
+
+```{r}
+
+rosenbrock <- function(x) {
+  d <- length(x)
+  xi <- x[1:(d-1)]
+  xnext <- x[2:d]
+  sum <- sum(100*(xnext-xi^2)^2 + (xi-1)^2)
+  sum
+}
+
+schwefel <- function(x) {
+  418.9829 * length(x) - sum(x * sin(sqrt(abs(x))))
+}
+
+
+```
+
+
+# Descenso por Gradiente
+
+Partimos de un punto inicial aleatorio.
+
+Calculamos el gradiente de la función (la dirección de mayor aumento).
+
+Nos movemos en dirección opuesta al gradiente (para minimizar).
+
+Repetimos hasta que el cambio sea muy pequeño (convergencia)
+
+Ya que la derivada análitica de la función Schwefel no es trivial, usaremos una aproximación númerica del gradiente
+implementada por la librería numDeriv
+
+
+```{r}
+rosenbrock_grad <- function(x) {
+  n <- length(x)
+  grad <- numeric(n)
+  for (i in 1:n) {
+    if (i > 1) grad[i] <- grad[i] + 200 * (x[i] - x[i-1]^2)
+    if (i < n) grad[i] <- grad[i] - 400 * x[i] * (x[i+1] - x[i]^2) + 2 * (x[i] - 1)
+  }
+  grad
+}
+
+gradient_descent <- function(fn, grad, x0, lr = 0.001, max_iter = 10000, tol = 1e-6) {
+  x <- x0
+  path <- list(x)
+  for (i in 1:max_iter) {
+    g <- grad(x)
+    if (length(g) != length(x)) stop("Error: el gradiente no tiene la misma longitud que x.")
+    
+    x_new <- x - lr * g
+    path[[i + 1]] <- x_new
+    ifelse (is.na(sqrt(sum((x_new - x)^2))) < tol, x<- x_new, break)
+  }
+  return(list(minimum = x, value = fn(x), path = path))
+}
+
+```
+
+# Optimización por gradiente en 2 Dimensiones
+
+```{r}
+set.seed(1983)
+x0_2d <- runif(2, -3, 3)
+res_rb_2d <- gradient_descent(rosenbrock, rosenbrock_grad, x0_2d)
+print(res_rb_2d$minimum)
+print(res_rb_2d$value)
+
+x0_2d <- runif(2, -500, 500)
+res_sw_2d <- gradient_descent(schwefel, function(x) grad(schwefel, x), x0_2d, lr = 0.001)
+print(res_sw_2d$minimum)
+print(res_sw_2d$value)
+
+```
+
+# Optimización por gradiente en 3 Dimensiones
+
+```{r}
+set.seed(1983)
+x0_3d <- runif(3, -2, 2)
+res_rb_3d <- gradient_descent(rosenbrock, rosenbrock_grad, x0_3d)
+print(res_rb_3d$minimum)
+print(res_rb_3d$value)
+
+x0_3d <- runif(3, -500, 500)
+res_sw_3d <- gradient_descent(schwefel, function(x) grad(schwefel, x), x0_3d, lr = 0.001)
+print(res_sw_3d$minimum)
+print(res_sw_3d$value)
+
+```
+
+#Optimización con Algoritmos evolutivos, Optimización de partículas y Evolución diferencial.
+
+## Algoritmos Evolutivos (GA):
+Con algoritmos evolutivos para la función Rosenbrock:
+```{r}
+# 2 dimensiones
+rosen_ga_2d <- ga(
+  type = "real-valued",
+  fitness = function(x) -rosenbrock(x),
+  lower = c(-5, -5), upper = c(5, 5),
+  popSize = 50, maxiter = 100, run = 50
+)
+# 3 dimensiones
+rosen_ga_3d <- ga(
+  type = "real-valued",
+  fitness = function(x) -rosenbrock(x),
+  lower = rep(-5, 3), upper = rep(5, 3),
+  popSize = 50, maxiter = 100, run = 50
+)
+
+```
+
+Con algoritmos evolutivos para la función Schwefel:
+```{r}
+# 2 dimensiones
+schwefel_ga_2d <- ga(
+  type = "real-valued",
+  fitness = function(x) -schwefel(x),
+  lower = rep(-500, 2), upper = rep(500, 2),
+  popSize = 50, maxiter = 100, run = 50
+)
+# 3 dimensiones
+schwefel_ga_3d <- ga(
+  type = "real-valued",
+  fitness = function(x) -schwefel(x),
+  lower = rep(-500, 3), upper = rep(500, 3),
+  popSize = 50, maxiter = 100, run = 50
+)
+
+```
+
+##Ejambre de partículas (PSO):
+Para la función Rosenbrock:
+```{r}
+# 2 dimensiones
+rosen_pso_2d <- psoptim(
+  par = rep(0, 2), fn = rosenbrock,
+  lower = rep(-5, 2), upper = rep(5, 2),
+  control = list(maxit = 100)
+)
+# 3 dimensiones
+rosen_pso_3d <- psoptim(
+  par = rep(0, 3), fn = rosenbrock,
+  lower = rep(-5, 3), upper = rep(5, 3),
+  control = list(maxit = 100)
+)
+
+```
+
+Para la función Schwefel:
+```{r}
+# 2 dimensiones
+schwefel_pso_2d <- psoptim(
+  par = rep(0, 2), fn = schwefel,
+  lower = rep(-500, 2), upper = rep(500, 2),
+  control = list(maxit = 100)
+)
+# 3 dimensiones
+schwefel_pso_3d <- psoptim(
+  par = rep(0, 3), fn = schwefel,
+  lower = rep(-500, 3), upper = rep(500, 3),
+  control = list(maxit = 100)
+)
+
+```
+
+##Evolución Diferencial (DE)
+Para la función Rosenbrock:
+```{r}
+#2 dimensiones
+rosen_de_2d <- DEoptim(
+  fn = rosenbrock,
+  lower = rep(-5, 2), upper = rep(5, 2),
+  DEoptim.control(itermax = 100)
+)
+#3 dimensiones
+rosen_de_3d <- DEoptim(
+  fn = rosenbrock,
+  lower = rep(-5, 3), upper = rep(5, 3),
+  DEoptim.control(itermax = 100)
+)
+```
+Para la función Schwefel:
+```{r}
+#2 dimensiones
+schwefel_de_2d <- DEoptim(
+  fn = schwefel,
+  lower = rep(-500, 2), upper = rep(500, 2),
+  DEoptim.control(itermax = 100)
+)
+#3 dimensiones
+schwefel_de_3d <- DEoptim(
+  fn = schwefel,
+  lower = rep(-500, 3), upper = rep(500, 3),
+  DEoptim.control(itermax = 100)
+)
+
+```
+
+# Gifs animados del proceso de optimización por descenso por gradiente y método heurístico de algoritmos evolutivos para la función Rosenbrock
+
+```{r}
+rosen_ga_2d <- ga(
+  type = "real-valued",
+  fitness = function(x) -rosenbrock(x),
+  lower = c(-5, -5), upper = c(5, 5),
+  popSize = 50, maxiter = 100, run = 50
+)
+rosen_ga_3d <- ga(
+  type = "real-valued",
+  fitness = function(x) -rosenbrock(x),
+  lower = rep(-5, 3), upper = rep(5, 3),
+  popSize = 50, maxiter = 100, run = 50
+)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+library(animation)
+# -----------------------------------------------
+# Animaciones Descenso por Gradiente
+# -----------------------------------------------
+
+make_gd_gif <- function(fn, path, filename = "descenso.gif") {
+  saveGIF({
+    x_seq <- seq(-2, 2, length.out = 100)
+    y_seq <- seq(-1, 3, length.out = 100)
+    z <- outer(x_seq, y_seq, Vectorize(function(x, y) fn(c(x, y))))
+
+    for (i in 1:length(path)) {
+      contour(x_seq, y_seq, z, nlevels = 50, col = "grey",
+              xlab = "x", ylab = "y", main = paste("Iteración", i))
+      pt <- unlist(path[[i]])  # Asegura que sea vector numérico
+      points(pt[1], pt[2], col = "red", pch = 20)
+    }
+  }, movie.name = filename, interval = 0.1, ani.width = 500, ani.height = 500)
+}
+
+# -----------------------------------------------
+# Particle Swarm Optimization con Tracking
+# -----------------------------------------------
+
+track_pso_positions <- function(fn, lower, upper, maxit = 100, s = 20) {
+  positions <- list()
+  iter <- 0
+  
+  fn_track <- function(x) {
+    iter <- iter + 1
+    positions[[iter]] <- x 
+    fn(x)
+  }
+  #print(positions)
+  result <- psoptim(par = runif(length(lower), lower, upper),
+                    fn = fn_track,
+                    lower = lower, upper = upper,
+                    control = list(maxit = maxit, s = s))
+  return(list(result = result, positions = positions))
+}
+
+make_pso_gif <- function(fn, positions, filename = "pso.gif") {
+  saveGIF({
+    x_seq <- seq(-2, 2, length.out = 100)
+    y_seq <- seq(-1, 3, length.out = 100)
+    z <- outer(x_seq, y_seq, Vectorize(function(x, y) fn(c(x, y))))
+    
+    for (i in seq_along(positions)) {
+      contour(x_seq, y_seq, z, nlevels = 50, col = "grey")
+      points(positions[[i]][,1], positions[[i]][,2], col = "blue", pch = 20)
+      Sys.sleep(0.1)
+    }
+  }, movie.name = filename, interval = 0.1, ani.width = 500, ani.height = 500)
+}
+
+# -----------------------------------------------
+# Differential Evolution con Tracking
+# -----------------------------------------------
+
+run_de_tracking <- function(fn, lower, upper, itermax = 100, NP = 20) {
+  DEoptim(fn = fn, lower = lower, upper = upper,
+          DEoptim.control(NP = NP, itermax = itermax,
+                          storepopfrom = 1, storepopfreq = 1))
+}
+
+make_de_gif <- function(fn, memberstore, filename = "de.gif") {
+  saveGIF({
+    x_seq <- seq(-2, 2, length.out = 100)
+    y_seq <- seq(-1, 3, length.out = 100)
+    z <- outer(x_seq, y_seq, Vectorize(function(x, y) fn(c(x, y))))
+    
+    for (i in 1:dim(memberstore)[3]) {
+      contour(x_seq, y_seq, z, nlevels = 50, col = "grey")
+      pop <- memberstore[,,i]
+      points(pop[,1], pop[,2], col = "darkgreen", pch = 20)
+      Sys.sleep(0.1)
+    }
+  }, movie.name = filename, interval = 0.1, ani.width = 500, ani.height = 500)
+}
+```
+
+
+```{r}
+path_gd <- gradient_descent(rosenbrock, function(x) grad(rosenbrock,x), c(-2,2), lr = 0.001, max_iter = 50)
+make_gd_gif(rosenbrock, path_gd$path, filename = "descenso_rosenbrock.gif")
+```
+```{r}
+res_pso <- track_pso_positions(rosenbrock, lower = c(-2, -1), upper = c(2, 3))
+make_pso_gif(rosenbrock, res_pso$positions, filename = "pso.gif")
+
+
+
+```
+
+
