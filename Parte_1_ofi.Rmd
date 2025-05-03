@@ -984,16 +984,19 @@ knitr::include_graphics("optimizacion_DE_sc.gif")
 
 
 ## Comparación de GIFs
-
+##### Rosenbrock PSO
 ```{r show_pso_gif_rosen, echo=FALSE}
 knitr::include_graphics("rosenbrock_pso_animation.gif")
 ```
+##### Schwefel PSO
 ```{r show_pso_gif_sch, echo=FALSE}
 knitr::include_graphics("schwefel_pso_animation.gif")
 ```
+##### Schwefel GA 3D
 ```{r show_ga_gif_sch, echo=FALSE}
 knitr::include_graphics("GA_Schwefel3D.gif")
 ```
+##### Schwefel GA 2D
 ```{r build_ga_sch_gif}
 knitr::include_graphics("GA_Schwefel.gif")
 ```
@@ -1031,11 +1034,18 @@ saveGIF({
 
 ```
 
-
+##### Rosenbrock GA 3D
 ```{r show_ga_rosen_2d_gif, echo=FALSE, out.width='100%'}
 knitr::include_graphics("GA_Rosenbrock.gif")
 ```
 
+#### Análisis de Animaciones
+Para funciones suaves y bien comportadas como Rosenbrock, el descenso por gradiente es eficiente y preciso, siempre que se parta de una buena condición inicial. Mientras que para funciones altamente multimodales o con formas complejas como Schwefel, los métodos heurísticos son superiores en la exploración global y probabilidad de encontrar el mínimo global.
+
+En la práctica, una estrategia mixta (heurístico global + refinamiento con gradiente) puede ofrecer lo mejor de ambos mundos. Dependiendo del contexto del problema, es probable que un método sea mejor que otro, los métodos heurísticos tienen más variabilidad y puede que tome más tiempo encontrar una solución que cumpla con los requisitos establecidos pero en caso de tenerse clara las condiciones iniciales que tiene el problema quizás sea mejor un descenso por gradiente, esto también puede ser algo negativo, el descenso por gradiente es sensible a estas condiciones iniciales. En conclusión, al momento de elegir un método es importante tener un entendimiento de tanto las opciones disponibles a aplicar como la complejidad del problema, es importante usar la herramienta adecuada, ni la más simple ni la más compleja.
+
+
+# 
 ------------------------------------------------------------------------
 
 ## Referencias
