@@ -406,7 +406,7 @@ rownames(feromonas) <- ciudades_nombres
 colnames(feromonas) <- ciudades_nombres
 
 # Visibilidad (1 / costo), evitando división por cero
-visibilidad <- 1 / (costo_matrix + diag(Inf, ciudades_cantidad))
+visibilidad <- 1 / (costos_matriz + diag(Inf, ciudades_cantidad))
 ```
 
 ### Ciclo principal de ACO
@@ -436,7 +436,7 @@ for (iter in 1:num_iteraciones) {
       visitadas <- c(visitadas, siguiente)
     }
     rutas[[k]] <- visitadas
-    costos[k] <- evaluar_ruta(visitadas, costo_matrix)
+    costos[k] <- evaluar_ruta(visitadas, costos_matriz)
     
     if (costos[k] < mejor_costo_aco) {
       mejor_costo_aco <- costos[k]
