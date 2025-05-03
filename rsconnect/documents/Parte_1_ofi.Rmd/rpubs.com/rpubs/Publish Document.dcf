@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/1305460/5cedd2aa40f641c2bd394e2645f7591f
+bundleId: https://api.rpubs.com/api/v1/document/1305460/5cedd2aa40f641c2bd394e2645f7591f
+url: http://rpubs.com/jochoar/1305460
+version: 1
